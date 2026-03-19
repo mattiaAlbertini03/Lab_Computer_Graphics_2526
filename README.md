@@ -2,3 +2,5 @@
 repository con gli esercizi svolti durante l'A.A. 2025-2026 per il corso di Computer Graphics per il corso Magistrale di Informatica a Bologna.
 
 1. [draw_bezier_curve](draw_bezier_curve/draw_bezier_curve.html)
+
+2. [persp_cubes_interact_webgl](persp_cubes_interact_webgl/persp_cubes_interact_webgl.html)

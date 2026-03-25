@@ -4,3 +4,7 @@ repository con gli esercizi svolti durante l'A.A. 2025-2026 per il corso di Comp
 1. [draw_bezier_curve](draw_bezier_curve/draw_bezier_curve.html)
 
 2. [persp_cubes_interact_webgl](persp_cubes_interact_webgl/persp_cubes_interact_webgl.html)
+
+3. [bouncing_sphere](bouncing_sphere/bouncing_sphere.html)
+
+4. [persp_cube_texture_interact_webgl_es4.html](persp_cube_texture_interact_webgl_es4/persp_cube_texture_interact_webgl_es4.html)

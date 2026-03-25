@@ -5,7 +5,7 @@ composto da cubi colorati.
 
 Con il mouse è posibile far muvere l'oggetto 3D.  
 
-All'interno del file html vengono definiti il vertex shader e il frament shader
+All'interno del file html vengono definiti il vertex shader e il frament shader.
 
-Il codice javascript usa le librerie [m4](m4.js) e [webglUtils](webgl-utils.js) 
+Il codice javascript usa le librerie [m4](m4.js) e [webglUtils](webgl-utils.js). 
 

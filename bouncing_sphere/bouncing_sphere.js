@@ -18,7 +18,6 @@ const bufferCuboInfo = webglUtils.createBufferInfoFromArrays(gl, data);
 
 var programInfo = webglUtils.createProgramInfo(gl, ["vertex-shader", "fragment-shader"]);
 
-const posLoc = gl.getAttribLocation(programInfo.program, 'a_position');
 gl.useProgram(programInfo.program);   
 
 var THETA = degToRad(20);
@@ -74,12 +73,9 @@ var animate=function(time) {
 		x += dx; 
 		y += dy; 
 		z += dz;
-		var ball_M = new Float32Array([
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			x, y, z, 1
-		]);
+
+		var ball_matrix=m4.identity();                                                                
+		ball_matrix=m4.translate(ball_matrix, x, y, z);                                              
 		let shared3Uniforms = {
 			Mmatrix: ball_M,
 		};         

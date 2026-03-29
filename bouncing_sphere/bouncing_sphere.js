@@ -77,7 +77,7 @@ var animate=function(time) {
 		var ball_matrix=m4.identity();                                                                
 		ball_matrix=m4.translate(ball_matrix, x, y, z);                                              
 		let shared3Uniforms = {
-			Mmatrix: ball_M,
+			Mmatrix: ball_matrix,
 		};         
 		webglUtils.setUniforms(programInfo, shared3Uniforms); 
 		webglUtils.setBuffersAndAttributes(gl, programInfo, bufferObjInfo);

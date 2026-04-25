@@ -8,3 +8,6 @@ repository con gli esercizi svolti durante l'A.A. 2025-2026 per il corso di Comp
 3. [bouncing_sphere](bouncing_sphere/bouncing_sphere.html)
 
 4. [persp_cube_texture_interact_webgl_es4.html](persp_cube_texture_interact_webgl_es4/persp_cube_texture_interact_webgl_es4.html)
+
+
+5. [esame](Albertini/project/index.html) ===> [relazione](Albertini/doc/relazione.html)

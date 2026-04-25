@@ -5,49 +5,49 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 		<title>3D-WebApp</title>
 		<style>
-body, html {
-	margin: 0;
-	padding: 0;
-	width: 100%;
-	height: 100%;
-	overflow: hidden; 
-}
-canvas {
-	width: 100vw;
-	height: 100vh;
-	display: block;
-}
+body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+canvas { width: 100vw; height: 100vh; display: block; }
 		</style>
 	</head>
 	<body>
-		<canvas id="canvas" width="700" height="700"></canvas>
+		<canvas id="canvas"></canvas>
 
 		<script id="skybox-vertex-shader" type="x-shader/x-vertex">
 			attribute vec4 a_position;
 			varying vec4 v_position;
 			void main() {
-			v_position = a_position;
-			gl_Position = vec4(a_position.xy, 1, 1);
+				v_position = a_position;
+				gl_Position = vec4(a_position.xy, 1.0, 1.0); // Force skybox to far depth plane
 			}
 		</script>
+
 		<script id="skybox-fragment-shader" type="x-shader/x-fragment">
 			precision mediump float;
 			uniform samplerCube u_skybox;
-			uniform mat4 u_viewDirectionProjectionInverse;
-
+			uniform mat4 u_viewProjectionInverse;
 			varying vec4 v_position;
 			void main() {
-			vec4 t = u_viewDirectionProjectionInverse * v_position;
-			gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
+				vec4 t = u_viewProjectionInverse * v_position;
+				gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
+			}
+		</script>
+		<script id="floor-vertex-shader" type="x-shader/x-vertex">
+			attribute vec3 a_position;
+			attribute vec3 a_color;
+			uniform mat4 PVmatrix; 
+			varying vec3 vColor;
+			void main(void) {
+				gl_Position = PVmatrix * vec4(a_position, 1.0);
+				vColor = a_color;
 			}
 		</script>
 
-
-		<script id="3d-vertex-shader" type="x-shader/x-vertex">
-
-		</script>
-		<script id="3d-fragment-shader" type="x-shader/x-fragment">
-
+		<script id="floor-fragment-shader" type="x-shader/x-fragment">
+			precision mediump float; 
+			varying vec3 vColor;
+			void main(void) {
+				gl_FragColor = vec4(vColor, 1.0);
+			}
 		</script>
 
 		<script type="text/javascript" src="resources/mesh_utils.js"></script>

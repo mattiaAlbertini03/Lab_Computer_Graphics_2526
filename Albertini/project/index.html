@@ -34,10 +34,11 @@ canvas { width: 100vw; height: 100vh; display: block; }
 		<script id="floor-vertex-shader" type="x-shader/x-vertex">
 			attribute vec3 a_position;
 			attribute vec3 a_color;
-			uniform mat4 PVmatrix; 
+			uniform mat4 Pmatrix;
+			uniform mat4 Vmatrix; 
 			varying vec3 vColor;
 			void main(void) {
-				gl_Position = PVmatrix * vec4(a_position, 1.0);
+				gl_Position = Pmatrix * Vmatrix * vec4(a_position, 1.0);
 				vColor = a_color;
 			}
 		</script>
@@ -47,6 +48,27 @@ canvas { width: 100vw; height: 100vh; display: block; }
 			varying vec3 vColor;
 			void main(void) {
 				gl_FragColor = vec4(vColor, 1.0);
+			}
+		</script>
+		
+		<script id="strange-cube-vertex-shader" type="not-javascript">
+			attribute vec3 a_position;
+			attribute vec3 a_color; //the color of the point 
+			uniform mat4 Pmatrix; 
+			uniform mat4 Vmatrix;
+			uniform mat4 Mmatrix;
+			varying vec3 vColor;
+			void main(void) { //pre-built function
+				gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(a_position, 1.);
+				vColor=a_color;
+			}
+		</script>
+
+		<script id="strange-cube-fragment-shader" type="not-javascript">
+			precision mediump float; 
+			varying vec3 vColor;
+			void main(void) {
+				gl_FragColor = vec4(vColor, 1.);
 			}
 		</script>
 

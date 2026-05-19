@@ -1,12 +1,16 @@
 "use strict";
+var mesh = new Array();
+var positions = [];
+var normals = [];
+var texcoords = [];
+var numVertices;
+var ambient, diffuse, specular, emissive, shininess, opacity;
+var objBufferInfo;
+var objProgramInfo;
 
 var canvas = document.getElementById("canvas");
 var gl = canvas.getContext("webgl");
 if (!gl) alert("webgl non è stato caricato!!!");
-
-let mouseDown = false;
-let lastMouseX = 0;
-let lastMouseY = 0;
 
 function degToRad(d) { return d * Math.PI / 180; }
 
@@ -103,35 +107,8 @@ const floorData = {
 const floorBufferInfo = webglUtils.createBufferInfoFromArrays(gl, floorData);
 
 /*================= SETUP STRANGE CUBE =================*/
-const l = 1.5;
 const strangeCubeProgramInfo = webglUtils.createProgramInfo(gl, ["strange-cube-vertex-shader", "strange-cube-fragment-shader"]);
-const strangeCubeData = {
-	position: [
-		-l,-l,-l,  l,-l,-l,  l,l,-l,  -l,l,-l,  -l,-l,l,  l,-l,l,  l,l,l, -l,l,l,  
-		-l,-l,-l,  -l,l,-l,  -l,l,l,  -l,-l,l,  l,-l,-l,  l,l,-l,  l,l,l,  l,-l,l, 
-		-l,-l,-l,  -l,-l,l,  l,-l,l,  l,-l,-l,  -l,l,-l,  -l,l,l,  l,l,l,  l,l,-l,
-	],
-	color: [
-		1,0,0,1,  1,0,0,1,  1,0,0,1,  1,0,0,1,
-		0,1,1,1,  0,1,1,1,  0,1,1,1,  0,1,1,1,
-		0,0,1,1,  0,0,1,1,  0,0,1,1,  0,0,1,1,
-		0,1,0,1,  0,1,0,1,  0,1,0,1,  0,1,0,1,
-		1,1,0,1,  1,1,0,1,  1,1,0,1,  1,1,0,1,
-		1,0,1,1,  1,0,1,1,  1,0,1,1,  1,0,1,1
-	],
-	indices: [ 0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23 ],
-};
-
 const strangeCubeBufferInfo = webglUtils.createBufferInfoFromArrays(gl, strangeCubeData);
-
-const strangeCubeData2 = {
-	position: [-l,-l,-l, l,-l,-l, l,l,-l, -l,l,-l, -l,-l,l, l,-l,l, l,l,l, -l,l,l,],
-	color: [
-		0,0,0,1, 0,0,0,1,  0,0,0,1,  0,0,0,1,
-		0,0,0,1, 0,0,0,1,  0,0,0,1,  0,0,0,1,
-	],
-	indices:[0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 1,5, 2,6, 3,7, 0,4],
-};
 const strangeCubeBufferInfo2 = webglUtils.createBufferInfoFromArrays(gl, strangeCubeData2);
 
 /*================= RENDER LOOP =================*/
@@ -186,6 +163,49 @@ function drawScene(time) {
 	});
 	webglUtils.drawBufferInfo(gl, floorBufferInfo);
 
+/*========DRAW OBJ MODEL==========*/
+	if (objBufferInfo) { // Safety check to ensure it's loaded
+		gl.useProgram(objProgramInfo.program);
+		
+		// Adjust this matrix if the model is too big/small or rotated wrong
+		var objWorldMatrix = m4.identity();
+		objWorldMatrix = m4.yRotate(objWorldMatrix, time * 0.5); // Add a little spin
+		// Example to move it up slightly if it's clipping the floor:
+		// objWorldMatrix = m4.translate(objWorldMatrix, 0, 1.0, 0); 
+		
+		webglUtils.setBuffersAndAttributes(gl, objProgramInfo, objBufferInfo);
+		
+		webglUtils.setUniforms(objProgramInfo, {
+			u_view: viewMatrix,
+			u_projection: projectionMatrix,
+			u_world: objWorldMatrix,
+			u_viewWorldPosition: camera, // Uses 'camera' array from index.js
+			u_lightDirection: m4.normalize([light[0], light[1], light[2]]), // Uses 'light' from index.js
+			u_ambientLight: [0.2, 0.2, 0.2],
+			u_colorLight: [1.0, 1.0, 1.0],
+			diffuse: diffuse,
+			ambient: ambient,
+			specular: specular,
+			emissive: emissive,
+			shininess: shininess,
+			opacity: opacity
+		});
+
+		// Texture Binding
+		gl.uniform1i(gl.getUniformLocation(objProgramInfo.program, "diffuseMap"), 0);
+		gl.activeTexture(gl.TEXTURE0);
+		for (var m = mesh.materials.length - 1; m >= 0; m--) {
+			if (mesh.materials[m] && mesh.materials[m].parameter) {
+				var tex = mesh.materials[m].parameter.get("map_Kd");
+				if (tex instanceof WebGLTexture) {
+					gl.bindTexture(gl.TEXTURE_2D, tex);
+					break;
+				}
+			}
+		}
+
+		webglUtils.drawBufferInfo(gl, objBufferInfo, gl.TRIANGLES, numVertices);
+	}
 	/*========DRAW SKYBOX==========*/
 	gl.depthFunc(gl.LEQUAL); 
 	gl.useProgram(skyboxProgramInfo.program);
@@ -204,179 +224,26 @@ function drawScene(time) {
 		u_skybox: texture,
 	});
 	webglUtils.drawBufferInfo(gl, skyboxBufferInfo);
+
+
 	requestAnimationFrame(drawScene);
 }
 
-drawScene(0);
+// Remove drawScene(0); at the bottom and put this instead:
 
-function cubiStrani(time, dx, dz){
+objProgramInfo = webglUtils.createProgramInfo(gl, ["obj-vertex-shader", "obj-fragment-shader"]);
+mesh.sourceMesh = 'resources/data/lovecraft.obj';
 
-	drawCube(time, dx, dz, 0, 0, 0);
-	drawCube(time, dx, dz, degToRad(45), 0, 0); 
-	drawCube(time, dx, dz, 0, 0, degToRad(45));
-	drawCube(time, dx, dz, 0, degToRad(45), 0);
-}
-
-function drawCube(time,dx, dz, rdx,rdy,rdz)
-{
-	let m_matrix=m4.identity(); 
-	m_matrix=m4.translate(m_matrix,dx,2,dz);
-	m_matrix=m4.xRotate(m_matrix, time+rdx);
-	m_matrix=m4.yRotate(m_matrix, time+rdy);
-	m_matrix=m4.zRotate(m_matrix, time+rdz);
-	webglUtils.setUniforms(strangeCubeProgramInfo, {
-		Mmatrix: m_matrix,
-	}); 
-
-	webglUtils.setBuffersAndAttributes(gl, strangeCubeProgramInfo, strangeCubeBufferInfo);
-	webglUtils.drawBufferInfo(gl, strangeCubeBufferInfo);
-
-	webglUtils.setBuffersAndAttributes(gl, strangeCubeProgramInfo, strangeCubeBufferInfo2);
-	webglUtils.drawBufferInfo(gl, strangeCubeBufferInfo2, gl.LINES);
-}
-
-/*================= EVENT MOUSE =================*/
-canvas.addEventListener('mousedown', (e) => {
-	mouseDown = true;
-	lastMouseX = e.clientX;
-	lastMouseY = e.clientY;
-	e.preventDefault();
-});
-
-canvas.addEventListener('mouseup', () => { mouseDown = false; });
-
-canvas.addEventListener('mousemove', (e) => {
-	e.preventDefault();
-	if (!mouseDown) return;
-	const deltaX = e.clientX - lastMouseX;
-	const deltaY = e.clientY - lastMouseY;
-	lastMouseX = e.clientX;
-	lastMouseY = e.clientY;
-
-	controls.theta += deltaX * 0.01;
-	controls.phi -= deltaY * 0.01;
-	controls.phi = Math.max(0.1, Math.min(3.0, controls.phi));
-
-
-});
-
-canvas.addEventListener('wheel', (e) => {
-	e.preventDefault();
-	controls.D += e.deltaY * 0.01;
-	controls.D = Math.max(15, Math.min(45, controls.D));
-});
-
-/*================= EVENT KEYBOARD =================*/
-window.addEventListener('keydown', (e) => {
-	if (e.key.toLowerCase() === 'w') {
-		controls.phiLight += dr;
-	} 
-	if (e.key.toLowerCase() === 's') {
-		controls.phiLight -= dr;
-	}
-	if (e.key.toLowerCase() === 'a') {
-		controls.thetaLight -= dr;
-	} 
-	if (e.key.toLowerCase() === 'd') {
-		controls.thetaLight += dr;
-	}
-	controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
-});
-/*================= EVENT TOUCHSCREEN =================*/
-canvas.addEventListener('touchstart', (e) => {
-	e.preventDefault();
-	mouseDown = true; 
-
-	const touch = e.touches[0];
-	lastMouseX = touch.clientX;
-	lastMouseY = touch.clientY;
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => { mouseDown = false; });
-
-canvas.addEventListener('touchmove', (e) => {
-	e.preventDefault();
-	if (!mouseDown) return;
-
-	const touch = e.touches[0];
-	const deltaX = touch.clientX - lastMouseX;
-	const deltaY = touch.clientY - lastMouseY;
-
-	lastMouseX = touch.clientX;
-	lastMouseY = touch.clientY;
-
-	controls.theta += deltaX * 0.01;
-	controls.phi -= deltaY * 0.01;
-
-	controls.phi = Math.max(0.1, Math.min(3.0, controls.phi));
-}, { passive: false });
-
-const zoomSlider = document.getElementById('zoom-slider');
-
-zoomSlider.addEventListener('input', (e) => {
-	controls.D = -parseFloat(e.target.value);
-});
-
-/*================= EVENT TOUCHSCREEN-JOYSTICK =================*/
-const zone = document.getElementById('joystick-zone');
-const handle = document.getElementById('joystick-handle');
-
-let lightDown = false;
-let startX, startY; 
-let lastJoystickX = 0; 
-let lastJoystickY = 0;
-
-zone.addEventListener('touchstart', (e) => {
-    lightDown = true;
+(async () => {
+    await LoadMesh(gl, mesh);
     
-    const rect = zone.getBoundingClientRect();
-    startX = rect.left + rect.width / 2;
-    startY = rect.top + rect.height / 2;
+    var Data = {
+        position: { numComponents: 3, data: positions },
+        normal: { numComponents: 3, data: normals },
+        texcoord: { numComponents: 2, data: texcoords },
+    };
+    objBufferInfo = webglUtils.createBufferInfoFromArrays(gl, Data);
     
-    const touch = e.touches[0];
-    lastJoystickX = touch.clientX;
-    lastJoystickY = touch.clientY;
-    
-    e.stopPropagation();
-}, { passive: false });
-
-zone.addEventListener('touchmove', (e) => {
-    if (!lightDown) return;
-    e.preventDefault();
-
-	const maxRadius = 60;  
-
-    const touch = e.touches[0];
-    const clientX = touch.clientX;
-    const clientY = touch.clientY;
-
-    let visualDeltaX = clientX - startX;
-    let visualDeltaY = clientY - startY;
-    let distance = Math.sqrt(visualDeltaX * visualDeltaX + visualDeltaY * visualDeltaY);
-
-    if (distance > maxRadius) {
-        visualDeltaX = (visualDeltaX / distance) * maxRadius;
-        visualDeltaY = (visualDeltaY / distance) * maxRadius;
-    }
-
-    handle.style.left = `calc(50% + ${visualDeltaX}px)`;
-    handle.style.top = `calc(50% + ${visualDeltaY}px)`;
-
-    const deltaX = clientX - lastJoystickX;
-    const deltaY = clientY - lastJoystickY;
-
-    lastJoystickX = clientX;
-    lastJoystickY = clientY;
-
-    controls.thetaLight += deltaX * 0.01;
-    controls.phiLight -= deltaY * 0.01;
-    controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
-
-}, { passive: false });
-
-zone.addEventListener('touchend', (e) => {
-    lightDown = false;
-
-    handle.style.left = '50%';
-    handle.style.top = '50%';
-}, { passive: false });
+    // Start the render loop ONLY after the model is fully loaded
+    drawScene(0);
+})();

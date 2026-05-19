@@ -36,16 +36,16 @@ canvas.addEventListener('wheel', (e) => {
 /*================= EVENT KEYBOARD =================*/
 window.addEventListener('keydown', (e) => {
 	if (e.key.toLowerCase() === 'w') {
-		controls.phiLight += dr;
+		controls.phiLight -= dr;
 	} 
 	if (e.key.toLowerCase() === 's') {
-		controls.phiLight -= dr;
+		controls.phiLight += dr;
 	}
 	if (e.key.toLowerCase() === 'a') {
-		controls.thetaLight -= dr;
+		controls.thetaLight += dr;
 	} 
 	if (e.key.toLowerCase() === 'd') {
-		controls.thetaLight += dr;
+		controls.thetaLight -= dr;
 	}
 	controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
 });

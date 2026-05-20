@@ -78,15 +78,9 @@ zone.addEventListener('touchmove', (e) => {
     handle.style.left = `calc(50% + ${visualDeltaX}px)`;
     handle.style.top = `calc(50% + ${visualDeltaY}px)`;
 
-    const deltaX = clientX - lastJoystickX;
-    const deltaY = clientY - lastJoystickY;
-
-    lastJoystickX = clientX;
-    lastJoystickY = clientY;
-
-    controls.thetaLight -= deltaX * 0.01;
-    controls.phiLight += deltaY * 0.01;
-    controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
+    controls.thetaLight -= dr * deltaX; // * 0.01;
+    controls.phiLight += dr * deltaY ; //* 0.01;
+	controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
 
 }, { passive: false });
 

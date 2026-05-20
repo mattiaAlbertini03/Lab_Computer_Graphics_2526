@@ -10,18 +10,18 @@ function drawObj(){
 	
 	webglUtils.setUniforms(objProgramInfo, dataUniform);
 
-	var objWorldMatrix = m4.identity();
-	objWorldMatrix = m4.scale(objWorldMatrix, 4, 4, 4);
-	objWorldMatrix = m4.translate(objWorldMatrix, 0, 1., 0);
+	var m_matrix = m4.identity();
+	m_matrix = m4.scale(m_matrix, 4, 4, 4);
+	m_matrix = m4.translate(m_matrix, 0, 1., 0);
 
 	webglUtils.setUniforms(objProgramInfo, {
-		u_view: m4.copy(viewMatrix),
-		u_projection: projectionMatrix,
-		u_world: objWorldMatrix,
-		u_viewWorldPosition: camera, 
+		Vmatrix: m4.copy(viewMatrix),
+		Pmatrix: projectionMatrix,
+		Mmatrix: m_matrix,
+		camera: camera, 
 		u_lightDirection: m4.normalize([light[0], light[1], light[2]]), 
-		u_ambientLight: [0.2, 0.2, 0.2],
-		u_colorLight: [1.0, 1.0, 1.0],
+		u_ambientLight: ambientLight,
+		u_colorLight: colorLight,
 	});
 	
 	gl.uniform1i(gl.getUniformLocation(objProgramInfo.program, "diffuseMap"), 0);

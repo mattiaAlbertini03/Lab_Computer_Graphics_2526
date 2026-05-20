@@ -21,20 +21,18 @@ texcoord: [
 		0,0, 1,0, 1,1, 0,1,
 		0,0, 1,0, 1,1, 0,1  
 	],	
+normal: [
+		0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1,
+		0,0,1, 0,0,1, 0,0,1, 0,0,1,
+		-1,0,0, -1,0,0, -1,0,0, -1,0,0,
+		1,0,0, 1,0,0, 1,0,0, 1,0,0,
+		0,-1,0, 0,-1,0, 0,-1,0, 0,-1,0,
+		0,1,0, 0,1,0, 0,1,0, 0,1,0
+	],
 	indices: [ 0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23 ],
 };
 
-const strangeCubeData2 = {
-	position: [-l,-l,-l, l,-l,-l, l,l,-l, -l,l,-l, -l,-l,l, l,-l,l, l,l,l, -l,l,l,],
-	color: [
-		0,0,0,1, 0,0,0,1,  0,0,0,1,  0,0,0,1,
-		0,0,0,1, 0,0,0,1,  0,0,0,1,  0,0,0,1,
-	],
-	indices:[0,1, 1,2, 2,3, 3,0, 4,5, 5,6, 6,7, 7,4, 1,5, 2,6, 3,7, 0,4],
-};
-
 var strangeCubeBufferInfo = webglUtils.createBufferInfoFromArrays(gl, strangeCubeData);
-var strangeCubeBufferInfo2 = webglUtils.createBufferInfoFromArrays(gl, strangeCubeData2);
 var strangeCubeProgramInfo = webglUtils.createProgramInfo(gl, ["strange-cube-vertex-shader", "strange-cube-fragment-shader"]);
 
 function drawCube(time,dx, dz, idx)
@@ -50,13 +48,13 @@ function drawCube(time,dx, dz, idx)
 	webglUtils.setUniforms(strangeCubeProgramInfo, {
 		Mmatrix: m_matrix,
 		mode: idx,
+		u_lightDirection: m4.normalize([light[0], light[1], light[2]]),
+		u_ambientLight: ambientLight,
+		u_colorLight: colorLight,
 	}); 
 
 	webglUtils.setBuffersAndAttributes(gl, strangeCubeProgramInfo, strangeCubeBufferInfo);
 	webglUtils.drawBufferInfo(gl, strangeCubeBufferInfo);
-
-	webglUtils.setBuffersAndAttributes(gl, strangeCubeProgramInfo, strangeCubeBufferInfo2);
-	webglUtils.drawBufferInfo(gl, strangeCubeBufferInfo2, gl.LINES);
 }
 
 function drawCubes(time){

@@ -35,14 +35,13 @@ gui.add(controls,"DLight").min(1.75).max(10).step(0.25);
 
 /*================= SETUP ENV =================*/
 
-webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
 var projectionMatrix;
 var camera;
 var light;
 var viewMatrix;
+var ambientLight = [0.2, 0.2, 0.2]; 
+var colorLight = [1.0, 1.0, 1.0];
 
 function find_xyz(t, p, d){
 	const x = Math.cos(t) * Math.sin(p) * d;
@@ -53,6 +52,10 @@ function find_xyz(t, p, d){
 
 function drawScene(time) {
 	time *= 0.0005;
+
+	webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
 	gl.enable(gl.DEPTH_TEST);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);

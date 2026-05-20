@@ -57,7 +57,7 @@ function drawSkybox(){
 	const VPIMatrix = m4.inverse(VPMatrix);
 
 	webglUtils.setUniforms(skyboxProgramInfo, {
-		u_viewProjectionInverse: VPIMatrix,
+		u_VPInverse: VPIMatrix,
 		u_skybox: textureSkybox,
 	});
 	webglUtils.drawBufferInfo(gl, skyboxBufferInfo);

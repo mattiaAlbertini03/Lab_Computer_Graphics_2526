@@ -18,17 +18,17 @@
 			varying vec4 v_position;
 			void main() {
 				v_position = a_position;
-				gl_Position = vec4(a_position.xy, 1.0, 1.0); // Force skybox to far depth plane
+				gl_Position = vec4(a_position.xy, 1.0, 1.0); 
 			}
 		</script>
 
 		<script id="skybox-fragment-shader" type="not-javascript">
 			precision mediump float;
 			uniform samplerCube u_skybox;
-			uniform mat4 u_viewProjectionInverse;
+			uniform mat4 u_VPInverse;
 			varying vec4 v_position;
 			void main() {
-				vec4 t = u_viewProjectionInverse * v_position;
+				vec4 t = u_VPInverse * v_position;
 				gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
 			}
 		</script>
@@ -54,95 +54,113 @@
 
 		<script id="strange-cube-vertex-shader" type="not-javascript">
 			attribute vec3 a_position;
+			attribute vec2 a_texcoord;
+			attribute vec3 a_normal; 
 			uniform mat4 Pmatrix; 
 			uniform mat4 Vmatrix;
 			uniform mat4 Mmatrix;
-			attribute vec2 a_texcoord;
+			varying vec3 v_normal; 
 			varying vec2 v_texcoord;
 			uniform int mode; 
 			void main(void) {
- 				 vec4 pos = Pmatrix*Vmatrix*Mmatrix*vec4(a_position, 1.);
-				gl_Position = pos;
+				gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(a_position, 1.);
 				if (mode == 1) gl_Position /= gl_Position.w;
 				if (mode == 2) gl_Position *= gl_Position.w;
 				if (mode == 3) gl_Position /= gl_Position.w;
-				
+
 				v_texcoord = a_texcoord;
+				v_normal = mat3(Mmatrix) * a_normal;
 			}
 		</script>
 
 		<script id="strange-cube-fragment-shader" type="not-javascript">
 			precision mediump float; 
-			varying vec2 v_texcoord;
+			
 			uniform sampler2D diffuseMap;
+			uniform vec3 u_lightDirection; 
+			uniform vec3 u_ambientLight; 
+			uniform vec3 u_colorLight;
+			
+			varying vec2 v_texcoord;
+			varying vec3 v_normal;
+
 			void main(void) {
-				gl_FragColor = vec4(texture2D(diffuseMap, v_texcoord));
+				vec3 normal = normalize(v_normal);
+				float fakeLight = dot(u_lightDirection, normal) * 0.5 + 0.5;
+
+				vec4 texColor = texture2D(diffuseMap, v_texcoord);
+				
+				vec3 effectiveDiffuse = texColor.rgb * u_colorLight.rgb * fakeLight; 
+				
+				vec3 finalColor = effectiveDiffuse + (texColor.rgb * u_ambientLight);
+
+				gl_FragColor = vec4(finalColor, texColor.a);
+
 			}
 		</script>
-		
 
-		
-<script id="obj-vertex-shader" type="not-javascript">
-  attribute vec4 a_position;
-  attribute vec3 a_normal;
-  attribute vec2 a_texcoord;
 
-  uniform mat4 u_projection;
-  uniform mat4 u_view;
-  uniform mat4 u_world;
-  uniform vec3 u_viewWorldPosition;
 
-  varying vec3 v_normal;
-  varying vec3 v_surfaceToView;
-  varying vec2 v_texcoord;
+		<script id="obj-vertex-shader" type="not-javascript">
+			attribute vec4 a_position;
+			attribute vec3 a_normal;
+			attribute vec2 a_texcoord;
 
-  void main() {
-    vec4 worldPosition = u_world * a_position;
-    gl_Position = u_projection * u_view * worldPosition;
-    v_surfaceToView = u_viewWorldPosition - worldPosition.xyz;
-    v_normal = mat3(u_world) * a_normal;
-    v_texcoord = a_texcoord;
-  }
-</script>
+			uniform mat4 Pmatrix;
+			uniform mat4 Vmatrix;
+			uniform mat4 Mmatrix;
+			uniform vec3 camera;
 
-<script id="obj-fragment-shader" type="not-javascript">
-  precision highp float;
+			varying vec3 v_normal;
+			varying vec3 v_surfaceToView;//
+			varying vec2 v_texcoord;
 
-  varying vec3 v_normal;
-  varying vec3 v_surfaceToView;
-  varying vec2 v_texcoord;
+			void main() {
+				vec4 worldPosition = Mmatrix * a_position;//
+				gl_Position = Pmatrix * Vmatrix * worldPosition;
+				v_surfaceToView = camera - worldPosition.xyz;//
+				v_normal = mat3(Mmatrix) * a_normal;
+				v_texcoord = a_texcoord;
+			}
+		</script>
 
-  uniform vec3 diffuse;
-  uniform vec3 ambient;
-  uniform vec3 emissive;
-  uniform vec3 specular;
-  uniform float shininess;
-  uniform float opacity;
-  uniform vec3 u_lightDirection;
-  uniform vec3 u_ambientLight;
-  uniform vec3 u_colorLight;
-  uniform sampler2D diffuseMap;
+		<script id="obj-fragment-shader" type="not-javascript">
+			precision mediump float; 
 
-  void main () {
-    vec3 normal = normalize(v_normal);
-    vec3 surfaceToViewDirection = normalize(v_surfaceToView);
-    vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
+			varying vec3 v_normal;
+			varying vec3 v_surfaceToView;  //??
+			varying vec2 v_texcoord;
 
-    float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
-    float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
+			uniform sampler2D diffuseMap;
+			uniform vec3 u_lightDirection;
+			uniform vec3 u_ambientLight;
+			uniform vec3 u_colorLight;
+			
+			uniform vec3 diffuse;
+			uniform vec3 ambient;//
+			uniform vec3 emissive;
+			uniform vec3 specular;
+			uniform float shininess;
+			uniform float opacity;
 
-    vec4 diffuseMapColor = texture2D(diffuseMap, v_texcoord);
-    vec3 effectiveDiffuse = diffuse * diffuseMapColor.rgb * u_colorLight.rgb;
-    float effectiveOpacity = opacity * diffuseMapColor.a;
+			void main () {
+				vec3 normal = normalize(v_normal);
+				vec3 surfaceToViewDirection = normalize(v_surfaceToView); //??
+				vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);//
 
-    gl_FragColor = vec4(
-        emissive +
-        ambient * u_ambientLight +
-        effectiveDiffuse * fakeLight +
-        specular * pow(specularLight, shininess),
-        effectiveOpacity);
-  }
-</script>
+				float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
+				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);//
+
+				vec4 texColor = texture2D(diffuseMap, v_texcoord);
+				
+				vec3 effectiveDiffuse = diffuse * texColor.rgb * u_colorLight.rgb * fakeLight; 
+				float effectiveOpacity = opacity * texColor.a; 
+
+				vec3 finalColor = emissive + (ambient * u_ambientLight) + effectiveDiffuse  + (specular * pow(specularLight, shininess));
+				//(ambient * u_ambientLight) (pow(specularLight, 100.0));
+				gl_FragColor = vec4(finalColor, effectiveOpacity);
+			}
+		</script>
 
 		<script type="text/javascript" src="resources/mesh_utils.js"></script>
 		<script type="text/javascript" src="resources/glm_utils.js"></script>

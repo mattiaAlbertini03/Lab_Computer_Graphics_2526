@@ -51,28 +51,36 @@
 			}
 		</script>
 
-		<script id="strange-cube-vertex-shader" type="not-javascript">
+		<script id="cubes-vertex-shader" type="not-javascript">
 			attribute vec3 a_position;
 			attribute vec2 a_texcoord;
 			attribute vec3 a_normal; 
+			
 			uniform mat4 Pmatrix; 
 			uniform mat4 Vmatrix;
 			uniform mat4 Mmatrix;
-			varying vec3 v_normal; 
-			varying vec2 v_texcoord;
 			uniform int mode; 
+			uniform vec3 camera;
+			
+			varying vec3 v_normal; 
+			varying vec3 v_surfaceToView;
+			varying vec2 v_texcoord;
 			void main(void) {
-				gl_Position = Pmatrix*Vmatrix*Mmatrix*vec4(a_position, 1.);
+				vec4 worldPosition = Mmatrix * vec4(a_position, 1.);
+				gl_Position = Pmatrix * Vmatrix * worldPosition;
+				
 				if (mode == 1) gl_Position /= gl_Position.w;
 				if (mode == 2) gl_Position *= gl_Position.w;
 				if (mode == 3) gl_Position /= gl_Position.w;
 
+				v_surfaceToView = camera - worldPosition.xyz;
+				
 				v_texcoord = a_texcoord;
 				v_normal = mat3(Mmatrix) * a_normal;
 			}
 		</script>
 
-		<script id="strange-cube-fragment-shader" type="not-javascript">
+		<script id="cubes-fragment-shader" type="not-javascript">
 			precision mediump float; 
 			
 			uniform sampler2D diffuseMap;
@@ -82,19 +90,25 @@
 			
 			varying vec2 v_texcoord;
 			varying vec3 v_normal;
-
+			varying vec3 v_surfaceToView; 
+			
 			void main(void) {
 				vec3 normal = normalize(v_normal);
+				
+				vec3 surfaceToViewDirection = normalize(v_surfaceToView); 
+				vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
+				
 				float fakeLight = dot(u_lightDirection, normal) * 0.5 + 0.5;
 
+				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
+			
 				vec4 texColor = texture2D(diffuseMap, v_texcoord);
 				
 				vec3 effectiveDiffuse = texColor.rgb * u_colorLight.rgb * fakeLight; 
 				
-				vec3 finalColor = effectiveDiffuse + (texColor.rgb * u_ambientLight);
+				vec3 finalColor = (vec3(0.2, 0.2, 0.2) * u_ambientLight) + effectiveDiffuse  + pow(specularLight, 100.0);
 
 				gl_FragColor = vec4(finalColor, texColor.a);
-
 			}
 		</script>
 
@@ -111,13 +125,13 @@
 			uniform vec3 camera;
 
 			varying vec3 v_normal;
-			varying vec3 v_surfaceToView;//
+			varying vec3 v_surfaceToView;
 			varying vec2 v_texcoord;
 
 			void main() {
-				vec4 worldPosition = Mmatrix * a_position;//
+				vec4 worldPosition = Mmatrix * a_position;
 				gl_Position = Pmatrix * Vmatrix * worldPosition;
-				v_surfaceToView = camera - worldPosition.xyz;//
+				v_surfaceToView = camera - worldPosition.xyz;
 				v_normal = mat3(Mmatrix) * a_normal;
 				v_texcoord = a_texcoord;
 			}
@@ -127,7 +141,7 @@
 			precision mediump float; 
 
 			varying vec3 v_normal;
-			varying vec3 v_surfaceToView;  //??
+			varying vec3 v_surfaceToView;  
 			varying vec2 v_texcoord;
 
 			uniform sampler2D diffuseMap;
@@ -136,7 +150,7 @@
 			uniform vec3 u_colorLight;
 			
 			uniform vec3 diffuse;
-			uniform vec3 ambient;//
+			uniform vec3 ambient;
 			uniform vec3 emissive;
 			uniform vec3 specular;
 			uniform float shininess;
@@ -144,11 +158,11 @@
 
 			void main () {
 				vec3 normal = normalize(v_normal);
-				vec3 surfaceToViewDirection = normalize(v_surfaceToView); //??
-				vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);//
+				vec3 surfaceToViewDirection = normalize(v_surfaceToView); 
+				vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
 
 				float fakeLight = dot(u_lightDirection, normal) * .5 + .5;
-				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);//
+				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
 
 				vec4 texColor = texture2D(diffuseMap, v_texcoord);
 				
@@ -156,7 +170,6 @@
 				float effectiveOpacity = opacity * texColor.a; 
 
 				vec3 finalColor = emissive + (ambient * u_ambientLight) + effectiveDiffuse  + (specular * pow(specularLight, shininess));
-				//(ambient * u_ambientLight) (pow(specularLight, 100.0));
 				gl_FragColor = vec4(finalColor, effectiveOpacity);
 			}
 		</script>
@@ -170,7 +183,7 @@
 		<script type="text/javascript" src="index.js"></script>
 		<script type="text/javascript" src="cthulhu.js"></script>
 		<script type="text/javascript" src="floor.js"></script>
-		<script type="text/javascript" src="strange_cube.js"></script>
+		<script type="text/javascript" src="cubes.js"></script>
 		<script type="text/javascript" src="skybox.js"></script>
 		<script type="text/javascript" src="mouse-keyboard.js"></script>
 		<script type="text/javascript" src="touch.js"></script>

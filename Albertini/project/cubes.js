@@ -7,7 +7,7 @@ const cubeTextures = [
     loadTexture(gl, "resources/images/", "Yog_sothoth.png"), 
 ];
 
-const strangeCubeData = {
+const cubesData = {
 	position: [
 		-l,-l,-l,  l,-l,-l,  l,l,-l,  -l,l,-l,  -l,-l,l,  l,-l,l,  l,l,l, -l,l,l,  
 		-l,-l,-l,  -l,l,-l,  -l,l,l,  -l,-l,l,  l,-l,-l,  l,l,-l,  l,l,l,  l,-l,l, 
@@ -32,8 +32,8 @@ normal: [
 	indices: [ 0,1,2, 0,2,3, 4,5,6, 4,6,7, 8,9,10, 8,10,11, 12,13,14, 12,14,15, 16,17,18, 16,18,19, 20,21,22, 20,22,23 ],
 };
 
-var strangeCubeBufferInfo = webglUtils.createBufferInfoFromArrays(gl, strangeCubeData);
-var strangeCubeProgramInfo = webglUtils.createProgramInfo(gl, ["strange-cube-vertex-shader", "strange-cube-fragment-shader"]);
+var cubesBufferInfo = webglUtils.createBufferInfoFromArrays(gl, cubesData);
+var cubesProgramInfo = webglUtils.createProgramInfo(gl, ["cubes-vertex-shader", "cubes-fragment-shader"]);
 
 function drawCube(time,dx, dz, idx)
 {
@@ -45,22 +45,23 @@ function drawCube(time,dx, dz, idx)
 	
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, cubeTextures[idx]);
-	webglUtils.setUniforms(strangeCubeProgramInfo, {
+	webglUtils.setUniforms(cubesProgramInfo, {
 		Mmatrix: m_matrix,
 		mode: idx,
 		u_lightDirection: m4.normalize([light[0], light[1], light[2]]),
 		u_ambientLight: ambientLight,
 		u_colorLight: colorLight,
+		camera: camera, 
 	}); 
 
-	webglUtils.setBuffersAndAttributes(gl, strangeCubeProgramInfo, strangeCubeBufferInfo);
-	webglUtils.drawBufferInfo(gl, strangeCubeBufferInfo);
+	webglUtils.setBuffersAndAttributes(gl, cubesProgramInfo, cubesBufferInfo);
+	webglUtils.drawBufferInfo(gl, cubesBufferInfo);
 }
 
 function drawCubes(time){
-	gl.useProgram(strangeCubeProgramInfo.program);   
+	gl.useProgram(cubesProgramInfo.program);   
 
-	webglUtils.setUniforms(strangeCubeProgramInfo,{
+	webglUtils.setUniforms(cubesProgramInfo,{
 		Vmatrix: m4.copy(viewMatrix),
 		Pmatrix: projectionMatrix,
 	});

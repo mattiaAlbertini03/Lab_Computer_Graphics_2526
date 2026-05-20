@@ -8,13 +8,14 @@ const skyboxData = {
 	indices: [ 0, 1, 2,  2, 1, 3 ],
 };
 
-;
+var skyboxProgramInfo = webglUtils.createProgramInfo(gl, ["skybox-vertex-shader", "skybox-fragment-shader"]);
 
-skyboxProgramInfo = webglUtils.createProgramInfo(gl, ["skybox-vertex-shader", "skybox-fragment-shader"]);
+var skyboxBufferInfo = webglUtils.createBufferInfoFromArrays(gl, skyboxData);
 
-skyboxBufferInfo = webglUtils.createBufferInfoFromArrays(gl, skyboxData);
 const textureSkybox = gl.createTexture();
-gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+gl.bindTexture(gl.TEXTURE_CUBE_MAP, textureSkybox);
+
+
 const faceInfos = [
 	{ target: gl.TEXTURE_CUBE_MAP_POSITIVE_X, url: 'resources/images/skybox/right.jpg' },
 	{ target: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, url: 'resources/images/skybox/left.jpg' },
@@ -23,12 +24,14 @@ const faceInfos = [
 	{ target: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, url: 'resources/images/skybox/front.jpg' },
 	{ target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, url: 'resources/images/skybox/back.jpg' },
 ]
+
 let imagesLoaded = 0;
 faceInfos.forEach((faceInfo) => {
 	const {target, url} = faceInfo;
 	const image = new Image();
 	image.src = url;
 	image.onload = function() {
+		gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 		gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 		imagesLoaded++;
 		if (imagesLoaded === 6) {
@@ -37,4 +40,27 @@ faceInfos.forEach((faceInfo) => {
 		}
 	};
 });
+
+
+function drawSkybox(){
+	gl.useProgram(skyboxProgramInfo.program);
+
+	webglUtils.setBuffersAndAttributes(gl, skyboxProgramInfo, skyboxBufferInfo);
+
+	var view = m4.copy(viewMatrix);
+
+	view[12] = 0; 
+	view[13] = 0; 
+	view[14] = 0;
+	
+	const VPMatrix = m4.multiply(projectionMatrix, view);
+	const VPIMatrix = m4.inverse(VPMatrix);
+
+	webglUtils.setUniforms(skyboxProgramInfo, {
+		u_viewProjectionInverse: VPIMatrix,
+		u_skybox: textureSkybox,
+	});
+	webglUtils.drawBufferInfo(gl, skyboxBufferInfo);
+}
+
 

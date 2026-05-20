@@ -1,13 +1,18 @@
+function isPowerOf2(value) {
+	return (value & (value - 1)) == 0;
+}
 //Funzione che carica una texture
 function loadTexture(gl, path, fileName) {
 	const texture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 
+	//[0, 0, 255, 255] 
 	const pixel = new Uint8Array([255, 255, 255, 255]);  // opaque white
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
 
 	if(fileName){
 		const image = new Image();
+		image.src = path + fileName;
 		image.onload = function() {
 			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 			gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -21,17 +26,11 @@ function loadTexture(gl, path, fileName) {
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 			}
 		};
-		image.src = path + fileName;
 	}
 	return texture;
-
-	function isPowerOf2(value) {
-		return (value & (value - 1)) == 0;
-	}
 }
 
-//Funzione che utilizza la libreria glm_utils per leggere un eventuale 
-//file MTL associato alla mesh
+//Funzione che utilizza la libreria glm_utils per leggere un eventuale file MTL associato alla mesh
 async function readMTLFile(MTLfileName, mesh) {
 	try {
 		const response = await fetch(MTLfileName);
@@ -99,11 +98,13 @@ async function LoadMesh(gl,mesh) {
 
 	// Load map texture with safe parameter check fallback
 	var textureFileName = "Cthulhu_2k_Base_Color.png";
+	var objTex = null; // Create a variable to capture the texture
 	if (activeMaterial && activeMaterial.parameter) {
 		if (activeMaterial.parameter.has("map_Kd") && activeMaterial.parameter.get("map_Kd")) {
 			textureFileName = activeMaterial.parameter.get("map_Kd");
 		}
-		activeMaterial.parameter.set("map_Kd", loadTexture(gl, path, textureFileName));
+		objTex = loadTexture(gl, path, textureFileName);
+		activeMaterial.parameter.set("map_Kd", objTex);
 	}
 
 	var x=[], y=[], z=[];
@@ -115,9 +116,9 @@ async function LoadMesh(gl,mesh) {
 	var ntexcoord=mesh.data.textCoords.length;
 	var nnormals=mesh.data.normal.length;
 	var ambient, diffuse, specular, emissive, shininess, opacity;
-var positions = [];
-var normals = [];
-var texcoords = [];
+	var positions = [];
+	var normals = [];
+	var texcoords = [];
 
 	for (var i=0; i<nvert; i++){
 		x[i]=mesh.data.vert[i+1].x;
@@ -158,7 +159,6 @@ var texcoords = [];
 	}         
 	numVertices=3*nface;
 
-
 	// Extract vectors from active material cleanly
 	if (activeMaterial && activeMaterial.parameter) {
 		ambient = activeMaterial.parameter.get("Ka") || [0.2, 0.2, 0.2];
@@ -168,20 +168,21 @@ var texcoords = [];
 		shininess = activeMaterial.parameter.get("Ns") || 100.0;
 		opacity = activeMaterial.parameter.get("Ni") || 1.0;
 	}
-	
+
 	dataObj = {
 		position: { numComponents: 3, data: positions },
 		normal: { numComponents: 3, data: normals },
 		texcoord: { numComponents: 2, data: texcoords },
 	};
 
-	
 	dataUniform = {
 		diffuse: diffuse,
 		ambient: ambient,
 		specular: specular,
 		emissive: emissive,
 		shininess: shininess,
-		opacity: opacity
+		opacity: opacity,
+diffuseMapTex: objTex // <--- Export the captured texture here
 	};
 }
+

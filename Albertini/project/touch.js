@@ -1,37 +1,56 @@
 /*================= EVENT TOUCHSCREEN =================*/
-canvas.addEventListener('touchstart', (e) => {
-	e.preventDefault();
-	mouseDown = true; 
+let lastDist = 0;
 
-	const touch = e.touches[0];
-	lastMouseX = touch.clientX;
-	lastMouseY = touch.clientY;
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    mouseDown = true;
+
+    const touch = e.touches[0];
+    lastMouseX = touch.clientX;
+    lastMouseY = touch.clientY;
+
+    if (e.touches.length === 2) {
+        lastDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
+    }
 }, { passive: false });
 
-canvas.addEventListener('touchend', () => { mouseDown = false; });
+canvas.addEventListener('touchend', () => { 
+    mouseDown = false; 
+    lastDist = 0; 
+});
 
 canvas.addEventListener('touchmove', (e) => {
-	e.preventDefault();
-	if (!mouseDown) return;
+    e.preventDefault();
+    if (!mouseDown) return;
 
-	const touch = e.touches[0];
-	const deltaX = touch.clientX - lastMouseX;
-	const deltaY = touch.clientY - lastMouseY;
+    if (e.touches.length === 2) {
+        const curDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+        );
 
-	lastMouseX = touch.clientX;
-	lastMouseY = touch.clientY;
+        if (lastDist > 0) {
+            const delta = curDist - lastDist;
+            controls.D += delta * 0.05; 
+        }
+        lastDist = curDist;
+    } 
+    else if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - lastMouseX;
+        const deltaY = touch.clientY - lastMouseY;
 
-	controls.theta += deltaX * 0.01;
-	controls.phi -= deltaY * 0.01;
-
-	controls.phi = Math.max(0.1, Math.min(3.0, controls.phi));
+        lastMouseX = touch.clientX;
+        lastMouseY = touch.clientY;
+        
+        controls.theta += deltaX * 0.01;
+        controls.phi -= deltaY * 0.01;
+        controls.phi = Math.max(0.1, Math.min(3.0, controls.phi));
+    }
 }, { passive: false });
-
-const zoomSlider = document.getElementById('zoom-slider');
-
-zoomSlider.addEventListener('input', (e) => {
-	controls.D = -parseFloat(e.target.value);
-});
 
 /*================= EVENT TOUCHSCREEN-JOYSTICK =================*/
 const zone = document.getElementById('joystick-zone');
@@ -78,8 +97,14 @@ zone.addEventListener('touchmove', (e) => {
     handle.style.left = `calc(50% + ${visualDeltaX}px)`;
     handle.style.top = `calc(50% + ${visualDeltaY}px)`;
 
-    controls.thetaLight -= dr * deltaX; // * 0.01;
-    controls.phiLight += dr * deltaY ; //* 0.01;
+    const deltaX = clientX - lastJoystickX;
+    const deltaY = clientY - lastJoystickY;
+
+    lastJoystickX = clientX;
+    lastJoystickY = clientY;
+
+	controls.thetaLight -= dr * deltaX * 0.1;
+    controls.phiLight += dr * deltaY  * 0.1;
 	controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
 
 }, { passive: false });

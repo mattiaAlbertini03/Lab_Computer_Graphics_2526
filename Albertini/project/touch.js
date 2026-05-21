@@ -34,7 +34,8 @@ canvas.addEventListener('touchmove', (e) => {
 
         if (lastDist > 0) {
             const delta = curDist - lastDist;
-            controls.D += delta * 0.05; 
+            controls.D -= delta * 0.05; 
+	    controls.D = Math.max(15, Math.min(45, controls.D));
         }
         lastDist = curDist;
     } 
@@ -104,7 +105,7 @@ zone.addEventListener('touchmove', (e) => {
     lastJoystickY = clientY;
 
 	controls.thetaLight -= dr * deltaX * 0.1;
-    controls.phiLight += dr * deltaY  * 0.1;
+    	controls.phiLight += dr * deltaY  * 0.1;
 	controls.phiLight = Math.max(0.1, Math.min(3.0, controls.phiLight));
 
 }, { passive: false });

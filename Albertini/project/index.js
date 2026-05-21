@@ -18,6 +18,7 @@ var  controls = {
 	thetaLight : degToRad(20),
 	phiLight  : degToRad(80),
 	DLight : 8.50,
+	mirror : false,
 }
 
 var gui = new dat.GUI();
@@ -31,7 +32,7 @@ gui.add(controls,"fovy").min(10).max(120).step(5);
 gui.add(controls,"thetaLight").min(0).max(6.28).step(dr);
 gui.add(controls,"phiLight").min(0.1).max(3.0).step(dr);
 gui.add(controls,"DLight").min(1.75).max(10).step(0.25);
-
+gui.add(controls,"mirror");
 
 /*================= SETUP ENV =================*/
 
@@ -77,7 +78,9 @@ const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	drawCubes(time);
 
 	/*========DRAW FLOOR ==========*/
-	drawFloor();
+	if(controls.mirror){
+		drawFloor();
+	}
 
 	/*========DRAW SKYBOX ==========*/
 	gl.depthFunc(gl.LEQUAL); 

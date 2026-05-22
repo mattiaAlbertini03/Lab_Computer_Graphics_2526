@@ -1,19 +1,4 @@
-const colors = [
-	[
-		0, 0, 0, 0,  
-		0, 0, 0, 0,  
-		0, 0, 0, 0,  
-		0, 0, 0, 0
-	],
-	[
-		0.1, 0.1, 0.1, 1,  
-		0.1, 0.1, 0.1, 1,  
-		0.1, 0.1, 0.1, 1,  
-		0.1, 0.1, 0.1, 1
-	],
-]
-
-var S = 10;
+const S = 10;
 const mirrorData = {
 	position: [
 		-S, 0, -S, 
@@ -21,27 +6,19 @@ const mirrorData = {
 		-S, 0,  S, 
 		S, 0,  S
 	],
-	color: colors[1],
+	color: [
+		0.1, 0.1, 0.1, 1,  
+		0.1, 0.1, 0.1, 1,  
+		0.1, 0.1, 0.1, 1,  
+		0.1, 0.1, 0.1, 1
+	],
 	indices: [0, 2, 1,  2, 3, 1], 
 };
 var mirrorBufferInfo = webglUtils.createBufferInfoFromArrays(gl, mirrorData);
 
-const mirrorData2 = {
-	position: [
-		-S, 0, -S, 
-		S, 0, -S, 
-		-S, 0,  S, 
-		S, 0,  S
-	],
-	color: colors[1],
-	indices: [0, 2, 1,  2, 3, 1], 
-};
-var mirrorBufferInfo2 = webglUtils.createBufferInfoFromArrays(gl, mirrorData2);
-
 var mirrorProgramInfo = webglUtils.createProgramInfo(gl, ["mirror-vertex-shader", "mirror-fragment-shader"]);
 
-function drawMirror(viewM, time){
-	var view = viewM;
+function drawMirror(view, time){
 	gl.useProgram(mirrorProgramInfo.program);
 	gl.enable(gl.STENCIL_TEST);
 	gl.clearStencil(0x0);
@@ -67,7 +44,7 @@ function drawMirror(viewM, time){
 	gl.disable(gl.STENCIL_TEST);
 
 	if(camera[1] < 0)
-		drawData(view, mirrorBufferInfo2);
+		drawData(view, mirrorBufferInfo);
 
 }
 

@@ -42,17 +42,17 @@ faceInfos.forEach((faceInfo) => {
 });
 
 
-function drawSkybox(){
+function drawSkybox(view0){
 	gl.useProgram(skyboxProgramInfo.program);
 
 	webglUtils.setBuffersAndAttributes(gl, skyboxProgramInfo, skyboxBufferInfo);
 
-	var view = m4.copy(viewMatrix);
+	var view = m4.copy(view0);
 
 	view[12] = 0; 
 	view[13] = 0; 
 	view[14] = 0;
-	
+
 	const VPMatrix = m4.multiply(projectionMatrix, view);
 	const VPIMatrix = m4.inverse(VPMatrix);
 

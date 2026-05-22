@@ -31,7 +31,7 @@
 				gl_FragColor = textureCube(u_skybox, normalize(t.xyz / t.w));
 			}
 		</script>
-		<script id="floor-vertex-shader" type="not-javascript">
+		<script id="mirror-vertex-shader" type="not-javascript">
 			attribute vec3 a_position;
 			attribute vec3 a_color;
 			uniform mat4 Pmatrix;
@@ -43,38 +43,37 @@
 			}
 		</script>
 
-		<script id="floor-fragment-shader" type="not-javascript">
+		<script id="mirror-fragment-shader" type="not-javascript">
 			precision mediump float; 
 			varying vec3 vColor;
 			void main(void) {
 				gl_FragColor = vec4(vColor, 1.0);
 			}
 		</script>
-
 		<script id="cubes-vertex-shader" type="not-javascript">
 			attribute vec3 a_position;
 			attribute vec2 a_texcoord;
 			attribute vec3 a_normal; 
-			
+
 			uniform mat4 Pmatrix; 
 			uniform mat4 Vmatrix;
 			uniform mat4 Mmatrix;
 			uniform int mode; 
 			uniform vec3 camera;
-			
+
 			varying vec3 v_normal; 
 			varying vec3 v_surfaceToView;
 			varying vec2 v_texcoord;
 			void main(void) {
 				vec4 worldPosition = Mmatrix * vec4(a_position, 1.);
 				gl_Position = Pmatrix * Vmatrix * worldPosition;
-				
+
 				if (mode == 1) gl_Position /= gl_Position.w;
 				if (mode == 2) gl_Position *= gl_Position.w;
 				if (mode == 3) gl_Position /= gl_Position.w;
 
 				v_surfaceToView = camera - worldPosition.xyz;
-				
+
 				v_texcoord = a_texcoord;
 				v_normal = mat3(Mmatrix) * a_normal;
 			}
@@ -82,30 +81,30 @@
 
 		<script id="cubes-fragment-shader" type="not-javascript">
 			precision mediump float; 
-			
+
 			uniform sampler2D diffuseMap;
 			uniform vec3 u_lightDirection; 
 			uniform vec3 u_ambientLight; 
 			uniform vec3 u_colorLight;
-			
+
 			varying vec2 v_texcoord;
 			varying vec3 v_normal;
 			varying vec3 v_surfaceToView; 
-			
+
 			void main(void) {
 				vec3 normal = normalize(v_normal);
-				
+
 				vec3 surfaceToViewDirection = normalize(v_surfaceToView); 
 				vec3 halfVector = normalize(u_lightDirection + surfaceToViewDirection);
-				
+
 				float fakeLight = dot(u_lightDirection, normal) * 0.5 + 0.5;
 
 				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
-			
+
 				vec4 texColor = texture2D(diffuseMap, v_texcoord);
-				
+
 				vec3 effectiveDiffuse = texColor.rgb * u_colorLight.rgb * fakeLight; 
-				
+
 				vec3 finalColor = (vec3(0.2, 0.2, 0.2) * u_ambientLight) + effectiveDiffuse  + pow(specularLight, 100.0);
 
 				gl_FragColor = vec4(finalColor, texColor.a);
@@ -148,7 +147,7 @@
 			uniform vec3 u_lightDirection;
 			uniform vec3 u_ambientLight;
 			uniform vec3 u_colorLight;
-			
+
 			uniform vec3 diffuse;
 			uniform vec3 ambient;
 			uniform vec3 emissive;
@@ -165,7 +164,7 @@
 				float specularLight = clamp(dot(normal, halfVector), 0.0, 1.0);
 
 				vec4 texColor = texture2D(diffuseMap, v_texcoord);
-				
+
 				vec3 effectiveDiffuse = diffuse * texColor.rgb * u_colorLight.rgb * fakeLight; 
 				float effectiveOpacity = opacity * texColor.a; 
 
@@ -182,7 +181,7 @@
 		<script type="text/javascript" src="load2_mesh.js"></script>
 		<script type="text/javascript" src="index.js"></script>
 		<script type="text/javascript" src="cthulhu.js"></script>
-		<script type="text/javascript" src="floor.js"></script>
+		<script type="text/javascript" src="mirror.js"></script>
 		<script type="text/javascript" src="cubes.js"></script>
 		<script type="text/javascript" src="skybox.js"></script>
 		<script type="text/javascript" src="mouse-keyboard.js"></script>

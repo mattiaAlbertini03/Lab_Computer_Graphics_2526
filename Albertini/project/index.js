@@ -55,11 +55,11 @@ function drawScene(time) {
 	time *= 0.0005;
 
 	webglUtils.resizeCanvasToDisplaySize(gl.canvas);
-gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
+	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+	const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 
 	gl.enable(gl.DEPTH_TEST);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
 	projectionMatrix = m4.perspective(degToRad(controls.fovy), aspect, controls.near, controls.far);
 
 	light = find_xyz(controls.thetaLight, controls.phiLight, controls.DLight);
@@ -72,19 +72,19 @@ const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
 	viewMatrix = m4.inverse(m4.lookAt(camera, target, up));
 
 	/*========DRAW OBJ MODEL ==========*/
-	drawObj();
+	drawObj(viewMatrix);
 
 	/*========DRAW STRANGE CUBE ==========*/
-	drawCubes(time);
+	drawCubes(time, viewMatrix);
 
 	/*========DRAW FLOOR ==========*/
 	if(controls.mirror){
-		drawFloor();
+		drawMirror(viewMatrix, time);
 	}
 
 	/*========DRAW SKYBOX ==========*/
 	gl.depthFunc(gl.LEQUAL); 
-	drawSkybox();
+	drawSkybox(viewMatrix);
 
 	requestAnimationFrame(drawScene);
 }

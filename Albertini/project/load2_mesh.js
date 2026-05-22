@@ -182,7 +182,7 @@ async function LoadMesh(gl,mesh) {
 		emissive: emissive,
 		shininess: shininess,
 		opacity: opacity,
-diffuseMapTex: objTex // <--- Export the captured texture here
+		diffuseMapTex: objTex // <--- Export the captured texture here
 	};
 }
 

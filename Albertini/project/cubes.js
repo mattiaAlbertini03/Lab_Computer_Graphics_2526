@@ -1,10 +1,10 @@
 const l = 1.5;
 
 const cubeTextures = [
-    loadTexture(gl, "resources/images/", "photo.jpg"), 
-    loadTexture(gl, "resources/images/", "tentacle.png"), 
-    loadTexture(gl, "resources/images/", "abnormal.png"), 
-    loadTexture(gl, "resources/images/", "Yog_sothoth.png"), 
+	loadTexture(gl, "resources/images/", "photo.jpg"), 
+	loadTexture(gl, "resources/images/", "tentacle.png"), 
+	loadTexture(gl, "resources/images/", "abnormal.png"), 
+	loadTexture(gl, "resources/images/", "Yog_sothoth.png"), 
 ];
 
 const cubesData = {
@@ -13,7 +13,7 @@ const cubesData = {
 		-l,-l,-l,  -l,l,-l,  -l,l,l,  -l,-l,l,  l,-l,-l,  l,l,-l,  l,l,l,  l,-l,l, 
 		-l,-l,-l,  -l,-l,l,  l,-l,l,  l,-l,-l,  -l,l,-l,  -l,l,l,  l,l,l,  l,l,-l,
 	],
-texcoord: [
+	texcoord: [
 		0,0, 1,0, 1,1, 0,1,
 		0,0, 1,0, 1,1, 0,1,
 		0,0, 1,0, 1,1, 0,1,
@@ -21,7 +21,7 @@ texcoord: [
 		0,0, 1,0, 1,1, 0,1,
 		0,0, 1,0, 1,1, 0,1  
 	],	
-normal: [
+	normal: [
 		0,0,-1, 0,0,-1, 0,0,-1, 0,0,-1,
 		0,0,1, 0,0,1, 0,0,1, 0,0,1,
 		-1,0,0, -1,0,0, -1,0,0, -1,0,0,
@@ -42,7 +42,7 @@ function drawCube(time,dx, dz, idx)
 	m_matrix=m4.xRotate(m_matrix, time);
 	m_matrix=m4.yRotate(m_matrix, -time);
 	m_matrix=m4.zRotate(m_matrix, time);
-	
+
 	gl.activeTexture(gl.TEXTURE0);
 	gl.bindTexture(gl.TEXTURE_2D, cubeTextures[idx]);
 	webglUtils.setUniforms(cubesProgramInfo, {
@@ -58,14 +58,14 @@ function drawCube(time,dx, dz, idx)
 	webglUtils.drawBufferInfo(gl, cubesBufferInfo);
 }
 
-function drawCubes(time){
+function drawCubes(time, view){
 	gl.useProgram(cubesProgramInfo.program);   
 
 	webglUtils.setUniforms(cubesProgramInfo,{
-		Vmatrix: m4.copy(viewMatrix),
+		Vmatrix: m4.copy(view),
 		Pmatrix: projectionMatrix,
 	});
-	var dist = S - l - 1.5;
+	var dist =  10 - l - 1.5;
 
 	drawCube(time, -dist, -dist, 0); 
 	drawCube(-time, dist, -dist, 1); 

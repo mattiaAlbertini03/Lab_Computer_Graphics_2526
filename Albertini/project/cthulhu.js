@@ -4,10 +4,10 @@ var dataObj;
 var numVertices;
 var dataUniform;
 
-function drawObj(){
+function drawObj(view){
 	gl.useProgram(objProgramInfo.program);
 	webglUtils.setBuffersAndAttributes(gl, objProgramInfo, objBufferInfo);
-	
+
 	webglUtils.setUniforms(objProgramInfo, dataUniform);
 
 	var m_matrix = m4.identity();
@@ -15,7 +15,7 @@ function drawObj(){
 	m_matrix = m4.translate(m_matrix, 0, 1., 0);
 
 	webglUtils.setUniforms(objProgramInfo, {
-		Vmatrix: m4.copy(viewMatrix),
+		Vmatrix: m4.copy(view),
 		Pmatrix: projectionMatrix,
 		Mmatrix: m_matrix,
 		camera: camera, 
@@ -23,7 +23,7 @@ function drawObj(){
 		u_ambientLight: ambientLight,
 		u_colorLight: colorLight,
 	});
-	
+
 	gl.uniform1i(gl.getUniformLocation(objProgramInfo.program, "diffuseMap"), 0);
 
 	gl.activeTexture(gl.TEXTURE0);

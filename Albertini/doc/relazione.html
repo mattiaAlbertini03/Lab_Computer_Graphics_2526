@@ -1,18 +1,106 @@
-<html> 
+<!doctype html>
+<html>
 	<head>
-		<title>3D-WebApp:Relazione</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+		<title>3D-WebApp: doc</title>
+		<link type="text/css" href="index.css" rel="stylesheet" />
 	</head>
 	<body>
-		<h1>3D-WebApp:Relazione</h1>
-		<br>
+		<h1>Relazione Tecnica di Progetto: 3D WebApp WebGL</h1>
+		<p><strong>Corso d'Esame:</strong>Computer Graphics</p>
+		<p><strong>Anno Accademico:</strong>2025/2026</p>
+		<p><strong>Studente:</strong> Mattia Albertini 0001235513</p>
+		<h2>Descrizione App e interazione per l'utente</h2>
+		<p>
+		L'applicazione &egrave; un simulatore grafico 3D interattivo sviluppato in WebGL nativo e ambientato in un suggestivo scenario di ispirazione lovecraftiana. All'interno di uno spazio delimitato da uno Skybox cosmico a 360&deg;, la scena mostra la mesh tridimensionale di Cthulhu e una serie di cubi rotanti, i cui riflessi sono calcolati in tempo reale su uno specchio planare inferiore.
+		</p>
+		<p>
 
-		<h2>Testo</h2> 
-	rimuovi floor e attivalo solo per mirrori( roba opzional    (21/22)
-		|
-		V
-	relazionie(gemini prima in inglese poi in italiano o non so)  (22/23)
+		L'utente gode di una completa libertàagrave; d'azione e interazione con l'ambiente:
+		<ul>
+			<li>Navigazione: Può esplorare la scena ruotando la telecamera (tramite trascinamento del mouse o scorrimento del dito su touch screen) e regolare lo zoom (con la rotella del mouse o il pinch-to-zoom a due dita).</li>
+
+			<li>Illuminazione: Ha la possibilitàagrave; di modificare l'orientamento della luce direzionale Blinn-Phong usando i tasti WASD da desktop o un joystick virtuale su mobile.</li>
+			<li>Configurazione: Tramite l'interfaccia grafica dat.GUI, può attivare o disattivare lo specchio in tempo reale e personalizzare i parametri ottici della telecamera, come l'apertura focale e la distanza della sorgente luminosa.</li>
+		</ul>
+		</p>
+		<h2>Moduli JS e Shader</h2>
+		<p>
+		L'architettura del software si sviluppa attraverso moduli JavaScript indipendenti, garantendo una netta separazione delle funzionalit&agrave;. Al posto di un'unica coppia globale, ho utilizzato una coppia di Vertex e Fragment Shader per ciascun modulo grafico.
+		</p>
+		<h3>index.js</h3>
+		<p>
+		Il file <span class="code-term">index.js</span> si occupa della configurazione dello stato globale, della gestione dell'interfaccia e del ciclo di rendering.
+		</p>
+		<p>
+		All'avvio, il file recupera il canvas e inizializza il contesto WebGL attivando esplicitamente lo Stencil Buffer. Definisce poi un oggetto controls che traccia i parametri fondamentali della scena: la posizione della telecamera e della luce (espresse in coordinate sferiche), i piani di clipping, l'apertura focale e l'attivazione del mirroir. 
+		</p>
+		<p>
+		Il nucleo operativo &egrave; la funzione drawScene(time), invocata ciclicamente a ogni frame. Questa routine adatta il viewport alle dimensioni del canvas, abilita il Depth Test e ripulisce i buffer. Successivamente, calcola la matrice di proiezione prospettica e genera la matrice di vista. Infine, esegue il rendering sequenziale di tutti i sotto-moduli grafici, distribuendo a ciascuno la matrice di vista aggiornata.
+		</p>
+		<h3>skybox.js</h3>
+		<p>
+		Il file <span class="code-term">skybox.js</span> gestisce la creazione e il rendering della mappa d'ambiente a 360&deg; che fa da sfondo alla scena. Lo script definisce la geometria di base tramite un quadrato bidimensionale piatto, inizializza lo shader program dedicato e configura una texture di tipo Cube Map (<code>gl.TEXTURE_CUBE_MAP</code>). Carica poi in modo asincrono le sei immagini corrispondenti alle facce del cubo e ne genera le relative mipmap.
+		<ul>
+			<li>Vertex Shader (skybox-vertex-shader): Forzando la coordinata Z e la componente omogenea W a 1.0 (gl_Position = vec4(a_position.xy, 1.0, 1.0)), l'algoritmo si assicura che lo Skybox venga renderizzato alla profondit&agrave; massima, posizionandosi sempre dietro a qualsiasi modello poligonale.</li>
+			<li> Fragment Shader (skybox-fragment-shader): Riceve come la matrice u_VPInverse (l'inversa della matrice di Vista-Proiezione) e la moltiplica per la posizione dello schermo. Effettuando la divisione prospettica e la normalizzazione del vettore, lo shader usa la funzione textureCube sulla texture u_skybox, garantendo che lo sfondo ruoti in modo perfettamente coerente con i movimenti della telecamera.</li>
+		</ul>
+		</p>
+		<h3>cubes.js</h3>
+		<p>
+		Il file <span class="code-term">cubes.js</span> gestisce la definizione geometrica, il caricamento delle texture e il rendering dei cubi rotanti distribuiti nella scena. Lo script inizializza un set di quattro texture e mappa i dati in un buffer unico. Attraverso la funzione <code>drawCube</code>, il codice applica traslazioni e rotazioni basate sul tempo per animare ciascun cubo in modo indipendente.
+		<ul>
+			<li>Vertex Shader (cubes-vertex-shader): Applico unaa distorsione prospettica alterando matematicamente il valore delle coordinate ingannando la rasterizzazione.</li> 
+			<li>Fragment Shader (cubes-fragment-shader): Determina il colore combinando il campionamento della texture con il modello di illuminazione Blinn-Phong. Calcola una luce diffusa attenuata e la componente speculare tramite il vettore mediano, impostando un esponente di brillantezza fisso a 100.0, sommandovi infine il contributo ambientale della scena.</li>
+		</ul>
+		</p>
+		<h3>load2_mesh.js</h3>
+		<p>
+		Il file <span class="code-term">load2_mesh.js</span> definisce le funzioni di supporto per la gestione delle texture e per l'elaborazione dei dati geometrici ed estetici dei modelli 3D.
+		</p>
+		<p>
+		La funzione loadTexture crea e inizializza le texture 2D in modo asincrono, applicando il ribaltamento verticale dell'asse Y e generando automaticamente le mipmap.
+		</p>
+		<p>
+		Parallelamente, lo script si occupa di elaborare la geometria della mesh poligonale: esegue un ciclo su tutte le facce del modello per estrarre e organizzare all'interno di array lineari le coordinate di mappatura UV e i vettori delle normali. Infine, calcola il numero totale di vertici complessivi ed estrae i parametri fisici dai materiali attivi, memorizzando i coefficienti per la luce ambientale, diffusa e le altre propriet&agrave; illuminotecniche necessarie al rendering.
+		</p>
+		<h3>cthulhu.js</h3>
+		<p>
+		Il file <span class="code-term">cthulhu.js</span> gestisce l'inizializzazione dello shader program e il rendering della mesh 3D principale del progetto. La funzione drawObj applica le trasformazioni geometriche di scala e traslazione, associa le uniform di camera e luce, e mappa la texture diffusa per disegnare l'oggetto tramite triangoli.
+		<ul>
+			<li>Fragment Shader (obj-fragment-shader): Implementa l'illuminazione Blinn-Phong fondendo il campionamento della texture con le propriet&agrave; fisiche del materiale per calcolare il colore e l'opacit&agrave; finali del frammento.</li>
+		</ul>
+		</p>
+		<h3>mirror.js</h3>
+		<p>
+		Il file <span class="code-term">mirror.js</span> gestisce la creazione e il posizionamento di uno specchio orizzontale posizionato sull'asse Y=0. La particolarit&agrave; del codice risiede nell'uso dello Stencil Buffer per realizzare una riflessione geometricamente controllata.
+		</p>
+		<p>
+		All'interno della funzione drawMirror, il modulo abilita il test dello stencil, azzera il buffer e lo configura in modo da scrivere il valore 1 esclusivamente in corrispondenza dei pixel occupati dalla geometria dello specchio. Durante questa fase viene genera una maschera invisibile che delimita l'area in cui verr&agrave; renderizzata la scena riflessa, disegnata invertendo la matrice di vista. Solo in seguito, le maschere vengono ripristinate per disegnare la superficie visibile dello specchio.
+		</p>
+		<h3>mouse-keyboard.js</h3>
+		<p>
+		l file <span class="code-term">mouse-keyboard.js</span> gestisce l'interazione con la scena 3D. L'input del mouse controlla interamente la telecamera, mentre l'utilizzo della rotella varia la distanza. In parallelo, lo script cattura gli eventi della tastiera tramite un ascoltatore globale keydown. La pressione dei tasti WASD va ha modificare la posizione sferica della luce direzionale.
+		</p>
+		<h3>touch.js</h3>
+		<p>
+		Il file <span class="code-term">touch.js</span> implementa il sistema di controllo dedicato ai dispositivi mobili. Gestisce due tipi di interazione: il trascinamento con un singolo dito per la rotazione della telecamera, e il "pinch-to-zoom" a due dita per regolare la distanza focale. In parallelo, il file mappa gli eventi sull'area del joystick, i  valori di input catturati dal joystick vengono poi convertiti per aggiornare la posizione sferica della luce.
+		</p>
+		<h2>Particolarit&agrave;</h2>
+		<h3>Modello luminoso Blinn-Phong</h3>
+		<p>
+		Il modello Blinn-Phong ottimizza il calcolo della luce speculare rispetto al classico Phong. Mentre il Phong standard richiede il calcolo del vettore <code>R</code> per confrontarlo con la direzione della camera <code>V</code>, Blinn-Phong introduce il vettore mediano <code>H</code> (halfway vector):
+		</p>
+		<div class="formula-display">H = (L + V) / ||L + V||</div>
+		<p>
+		La riflessione speculare viene stimata tramite il prodotto scalare fra <code>N</code>(la normale della superficie) e <code>H</code>. Il risultato &egrave; una sfumatura della luce decisamente pi&ugrave; morbida e realistica.
+		</p>
+		<h3>Correzione prospettica errata</h3>
+		<p>
+		Nel vertex shader dei cubi risiede c'&egrave; un'alterazione intenzionale della correttezza prospettica in fase di rasterizzazione.
+		</p>
 
 	</body>
 </html>
-
 
